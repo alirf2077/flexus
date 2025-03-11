@@ -55,7 +55,7 @@ struct do_cycle_uncore<0, DriveHandleIter>
 template<class DriveHandles>
 struct do_cycle
 {
-    static void doCycle()
+    static std::tuple<uint32_t, uint32_t> doCycle()
     {
         typedef typename mpl::deref<typename mpl::begin<DriveHandles>::type>::type coreDriveHandles;
         typedef typename mpl::deref<typename mpl::next<typename mpl::begin<DriveHandles>::type>::type>::type uncoreDriveHandles;
@@ -63,6 +63,14 @@ struct do_cycle
         index_t* freq = ComponentManager::getComponentManager().getFreq().freq;
         index_t maxFreq = ComponentManager::getComponentManager().getFreq().maxFreq;
         index_t sysWidth = ComponentManager::getComponentManager().systemWidth();
+
+        uint32_t advanceCycles = freq[sysWidth];
+        uint32_t scaleFactor = ComponentManager::getComponentManager().getFreq().scaleFactor;
+
+        DBG_(Dev, (<< "maxFreq: " << maxFreq << " sysWidth: " << sysWidth));
+        for (index_t id = 0; id <= sysWidth; ++id) {
+            DBG_(Dev, (<< "freq[" << id << "]: " << freq[id]));
+        }
 
         for(index_t iter = 0; iter < maxFreq; ++iter) {
             for(index_t id = 0; id <= sysWidth; ++id) {
@@ -75,6 +83,7 @@ struct do_cycle
                 }
             }
         }
+        return std::make_tuple(advanceCycles, scaleFactor);
     }
 };
 } // namespace aux_
@@ -110,7 +119,7 @@ struct list_drives
 template<class OrderedDriveHandleList>
 class Drive : public DriveBase
 {
-    virtual void doCycle()
+    virtual std::tuple<uint32_t, uint32_t> doCycle()
     {
         // Through the magic of template expansion and static dispatch, this calls
         // every Drive's do_cycle() method in the order specified in

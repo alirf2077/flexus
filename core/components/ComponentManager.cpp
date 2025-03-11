@@ -121,22 +121,12 @@ class ComponentManagerImpl : public ComponentManager
             driveFreq[i] = (lcmDen / denominator[i]) * numerator[i];
         }
 
-        // Calculate the GCD of all drive frequencies
-        index_t gcdFreq = driveFreq[0];
-        for(index_t i = 1; i <= aSystemWidth; ++i) {
-            gcdFreq = gcd(gcdFreq, driveFreq[i]);
-        }
-
-        // Normalize the drive frequencies
-        for(index_t i = 0; i <= aSystemWidth; ++i) {
-            driveFreq[i] /= gcdFreq;
-        }
-
         // Store the drive frequencies
         theDriveFreq.freq = new index_t[aSystemWidth + 1];
         std::copy(driveFreq, driveFreq + aSystemWidth + 1, theDriveFreq.freq);
         std::sort(driveFreq, driveFreq + aSystemWidth + 1);
         theDriveFreq.maxFreq = driveFreq[aSystemWidth];
+        theDriveFreq.scaleFactor = lcmDen;
     }
 
     void registerComponent(ComponentInterface* aComponent) { theComponents.push_back(aComponent); }
