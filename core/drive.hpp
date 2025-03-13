@@ -125,7 +125,7 @@ class Drive : public DriveBase
         // every Drive's do_cycle() method in the order specified in
         // OrderedDriveHandleList.
         FLEXUS_PROFILE_N("Drive::doCycle");
-        aux_::do_cycle<OrderedDriveHandleList>::doCycle();
+        return aux_::do_cycle<OrderedDriveHandleList>::doCycle();
     }
 };
 

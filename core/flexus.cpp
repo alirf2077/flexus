@@ -157,7 +157,7 @@ FlexusImpl::advanceCycles(uint32_t aCycleCount, uint32_t aTickCount)
 std::tuple<uint32_t, uint32_t>
 FlexusImpl::invokeDrives()
 {
-    theDrive.doCycle();
+    return theDrive.doCycle();
 }
 
 void
