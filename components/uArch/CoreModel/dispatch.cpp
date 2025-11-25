@@ -165,7 +165,29 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
     anInsn->connectuArch(*this);
     // If in-order execution is enabled, hook instructions together to force
     // them to execute in order.
-    if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
+
+    // Each load/store is being connected to the previous load/store
+    if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore) {
+        for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
+            if ((*rit)->instClass() == clsLoad || (*rit)->instClass() == clsStore) {
+                anInsn->setPreceedingInstruction(*rit);
+                break;
+            }
+        }
+    } else {
+        //each instruction that is not load/store is connected to the latest
+        //instruction that is not load/store
+        for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
+            auto cls = (*rit)->instClass();
+            if (cls != clsLoad && cls != clsStore) {
+                anInsn->setPreceedingInstruction(*rit);
+                break;
+            }
+        }
+    }
+
+
+    // if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
     theROB.push_back(anInsn);
     // theNPC = boost::none;
 
