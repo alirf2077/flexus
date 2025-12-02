@@ -87,7 +87,7 @@ struct WritebackAction : public BaseSemanticAction
                 theInstruction->setOperand(theResult, res);
             }
             DBG_(VVerb, (<< "Writing " << std::hex << result << std::dec << " to " << r << "-REG ->" << name));
-            core()->writeRegister(name, result, !the64);
+            core()->writeRegister(name, result, !the64, theInstruction->pc());
             DBG_(VVerb, (<< *this << " rd= " << name << " result=" << result));
             core()->bypass(name, result);
             satisfyDependants();
@@ -154,7 +154,7 @@ struct WriteccAction : public BaseSemanticAction
             ccresult &= ~(0xF << 28);
             ccresult |= flags;
             DBG_(VVerb, (<< "Writing to CC: " << std::hex << ccresult << ", " << std::dec << *theInstruction));
-            core()->writeRegister(name, ccresult, false);
+            core()->writeRegister(name, ccresult, false, theInstruction->pc());
             core()->bypass(name, ccresult);
             satisfyDependants();
         } else {

@@ -20,6 +20,7 @@ class RegisterFile
     std::vector<std::vector<eResourceStatus>> theStatus;
     std::vector<std::vector<register_value>> theRegs;
     std::vector<std::vector<int32_t>> theCollectCounts;
+    std::vector<std::vector<VirtualMemoryAddress>> theLastPCs;
 
     bool theInOrder;
 
@@ -29,12 +30,14 @@ class RegisterFile
         theDependances.resize(aSizes.size());
         theStatus.resize(aSizes.size());
         theRegs.resize(aSizes.size());
+        theLastPCs.resize(aSizes.size());
         theCollectCounts.resize(aSizes.size());
 
         for (uint32_t i = 0; i < aSizes.size(); ++i) {
             theDependances[i].resize(aSizes[i]);
             theStatus[i].resize(aSizes[i]);
             theRegs[i].resize(aSizes[i]);
+            theLastPCs[i].resize(aSizes[i]);
             theCollectCounts[i].resize(aSizes[i], 10);
         }
 
@@ -54,6 +57,9 @@ class RegisterFile
             }
             for (auto& aReg : theRegs[i]) {
                 aReg = (uint64_t)0ULL;
+            }
+            for (auto& aLastPC : theLastPCs[i]) {
+                aLastPC = (uint64_t)0ULL;
             }
         }
     }
@@ -158,11 +164,12 @@ class RegisterFile
         return peek(aReg);
     }
 
-    void write(mapped_reg aReg, register_value aValue, uArch& aCore, bool isW)
+    void write(mapped_reg aReg, register_value aValue, uArch& aCore, bool isW, VirtualMemoryAddress thePC)
     {
         FLEXUS_PROFILE();
         poke(aReg, aValue, isW);
         theStatus[aReg.theType][aReg.theIndex] = kReady;
+        theLastPCs[aReg.theType][aReg.theIndex] = thePC;
 
         std::list<InstructionDependance>::iterator iter = theDependances[aReg.theType][aReg.theIndex].begin();
         std::list<InstructionDependance>::iterator end  = theDependances[aReg.theType][aReg.theIndex].end();
@@ -177,6 +184,8 @@ class RegisterFile
             }
         }
     }
+
+    VirtualMemoryAddress lastWriterPC(mapped_reg aReg) { return theLastPCs[aReg.theType][aReg.theIndex]; }
 };
 
 } // namespace nuArchARM

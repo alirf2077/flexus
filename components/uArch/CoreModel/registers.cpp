@@ -78,9 +78,9 @@ CoreImpl::readArchitecturalRegister(reg aRegister, bool aRotate)
 }
 
 void
-CoreImpl::writeRegister(mapped_reg aRegister, register_value aValue, bool isW = false)
+CoreImpl::writeRegister(mapped_reg aRegister, register_value aValue, bool isW = false, VirtualMemoryAddress thePC = 0ULL)
 {
-    return theRegisters.write(aRegister, aValue, *this, isW);
+    return theRegisters.write(aRegister, aValue, *this, isW, thePC);
 }
 
 void

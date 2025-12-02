@@ -165,8 +165,14 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
     anInsn->connectuArch(*this);
     // If in-order execution is enabled, hook instructions together to force
     // them to execute in order.
+    
+    
+    //PC of the instruction: anInsn->pc
+    //Destination register of instruction: 
+    //Last PC to write to a register: theRegisters.lastWriterPC(aReg)
 
-    // Each load/store is being connected to the previous load/store
+
+     // Each load/store is being connected to the previous load/store
     if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore) {
         for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
             if ((*rit)->instClass() == clsLoad || (*rit)->instClass() == clsStore) {
