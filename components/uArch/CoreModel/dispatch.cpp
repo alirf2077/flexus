@@ -173,19 +173,28 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
 
 
      // Each load/store is being connected to the previous load/store
-    if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore) {
+    if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
+
+
         for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
-            if ((*rit)->instClass() == clsLoad || (*rit)->instClass() == clsStore) {
+            auto cls = (*rit)->instClass();
+            if (cls == clsLoad || cls == clsStore || theIST.lookup((*rit)->pc())) {
                 anInsn->setPreceedingInstruction(*rit);
                 break;
             }
+        }
+
+        
+
+        for (auto producerReg : producers) {
+            theIST.access(theRegisters.lastWriterPC(producerReg));
         }
     } else {
         //each instruction that is not load/store is connected to the latest
         //instruction that is not load/store
         for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
             auto cls = (*rit)->instClass();
-            if (cls != clsLoad && cls != clsStore) {
+            if (cls != clsLoad && cls != clsStore && !theIST.lookup((*rit)->pc())) {
                 anInsn->setPreceedingInstruction(*rit);
                 break;
             }

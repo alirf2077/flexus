@@ -46,6 +46,7 @@ CoreImpl::CoreImpl(uArchOptions_t options,
   , thePreserveInteractions(false)
   , theMemoryPortArbiter(*this, options.numMemoryPorts, options.numStorePrefetches)
   , theROBSize(options.ROBSize)
+  , theISTSize(128)     //provisional size; can be tuned later if needed
   , theRetireWidth(options.retireWidth)
   , theInterruptSignalled(false)
   , thePendingInterrupt(kException_None)
@@ -404,6 +405,7 @@ CoreImpl::resetCore()
     theDispatchingInsts.clear();
 
     theROB.clear();
+    theIST.clear();
 
     theSquashRequested = false;
     theSquashReason    = eSquashCause(0);
