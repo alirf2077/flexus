@@ -93,7 +93,7 @@ CoreImpl::CoreImpl(uArchOptions_t options,
   theTrackParallelAccesses(options.trackParallelAccesses)
   , /* CMU-ONLY */
   theInOrderMemory(options.inOrderMemory)
-  , theInOrderExecute(true)
+  , theInOrderExecute(options.inOrderExecute)
   , theIdleThisCycle(false)
   , theIdleCycleCount(0)
   , theBBVTracker(/*BBVTracker::createBBVTracker(aNode)*/ 0)
