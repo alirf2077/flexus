@@ -185,10 +185,10 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
         }
 
         
-
-        for (auto producerReg : producers) {
-            theIST.access(theRegisters.lastWriterPC(producerReg));
-        }
+        // COMMENTED OUT NON-FUNCTIONAL CODE TO PUSH TO BRANCH. HAVE TO FIX THIS SOON.
+        // for (auto producerReg : producers) {
+        //     theIST.access(theRegisters.lastWriterPC(producerReg));
+        // }
     } else {
         //each instruction that is not load/store is connected to the latest
         //instruction that is not load/store
