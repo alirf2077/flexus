@@ -1,6 +1,7 @@
 
 #include "coreModelImpl.hpp"
 #include <components/Decoder/SemanticActions.hpp>
+#include <components/Decoder/SemanticInstruction.hpp> // near top if not present
 
 #define DBG_DeclareCategories uArchCat
 #define DBG_SetDefaultOps     AddCat(uArchCat)
@@ -188,6 +189,29 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
         }
     }
    
+
+if (auto sinst = boost::dynamic_pointer_cast<nDecoder::SemanticInstruction>(anInsn)) {
+    static const nDecoder::eOperandCode kSrcs[] = {nDecoder::kRS1, nDecoder::kRS2,
+                                                   nDecoder::kRS3, nDecoder::kRS4, nDecoder::kRS5};
+    for (auto oc : kSrcs) {
+        if (sinst->hasOperand(oc)) {
+            reg mr = sinst->operand<reg>(oc);
+            DBG_(Crit, (<< " src " << oc << " -> " << mr));
+        }
+    }
+
+    static const nDecoder::eOperandCode kDsts[] = {nDecoder::kRD, nDecoder::kRD1,
+                                                   nDecoder::kRD2, nDecoder::kCCpd};
+    for (auto oc : kDsts) {
+        if (sinst->hasOperand(oc)) {
+            reg mr = sinst->operand<reg>(oc);
+            DBG_(Crit, (<< " dst " << oc << " -> " << mr));
+        }
+    }
+}
+
+
+
     theROB.push_back(anInsn);
     // theNPC = boost::none;
 
