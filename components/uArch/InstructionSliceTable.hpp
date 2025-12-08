@@ -17,11 +17,13 @@ class InstructionSliceTable
 {
   protected:
     std::vector<VirtualMemoryAddress> theISTList;
+    uint32_t capacity;
 
   public:
     void initialize(uint32_t theSize)
     {
         theISTList.reserve(theSize);
+        capacity = theSize;
         reset();
     }
 
@@ -35,27 +37,33 @@ class InstructionSliceTable
     {
         FLEXUS_PROFILE();
         
-        auto it = std::find(entries.begin(), entries.end(), anInsnAddr);
-        if (it != entries.end()) {
+        auto it = std::find(theISTList.begin(), theISTList.end(), anInsnAddr);
+        if (it != theISTList.end()) {
             // HIT: Move this element to the back (MRU)
             // std::rotate shifts elements left, moving the element at 'it' to the end.
-            std::rotate(it, it + 1, entries.end());
-            return true;
+            std::rotate(it, it + 1, theISTList.end());
+            return;
         } else {
             // MISS: Insert new element
-            if (entries.size() == capacity) {
+            if (theISTList.size() == capacity) {
                 // Evict LRU (the element at the front)
-                entries.erase(entries.begin());
+                theISTList.erase(theISTList.begin());
             }
-            entries.push_back(anInsnAddr);
-            return false;
+            theISTList.push_back(anInsnAddr);
+            return;
         }
     }
 
-    void lookup(VirtualMemoryAddress anInsnAddr)
+    bool lookup(VirtualMemoryAddress anInsnAddr)
     {
         FLEXUS_PROFILE();
-        return std::find(entries.begin(), entries.end(), anInsnAddr) != entries.end();
+        return std::find(theISTList.begin(), theISTList.end(), anInsnAddr) != theISTList.end();
+    }
+
+    void clear()
+    {
+        FLEXUS_PROFILE();
+        theISTList.clear();
     }
 
 };
