@@ -31,6 +31,7 @@ namespace Stat = Flexus::Stat;
 #include "../CoreModel.hpp"
 #include "../MapTable.hpp"
 #include "../RegisterFile.hpp"
+#include "../InstructionSliceTable.hpp"
 #include "../systemRegister.hpp"
 #include "FPStatRegisters.hpp" // Msutherl
 #include "PSTATE.hpp"
@@ -102,6 +103,9 @@ class CoreImpl : public CoreModel
     // Register Files
     RegisterFile theRegisters;
     int32_t theRoundingMode;
+
+    // The Instruction Slice Table
+    InstructionSliceTable theIST;
 
     uint64_t thePC;
     bool theAARCH64;

@@ -1,7 +1,6 @@
 
 #include "coreModelImpl.hpp"
 #include <components/Decoder/SemanticActions.hpp>
-#include <components/Decoder/SemanticInstruction.hpp> // near top if not present
 
 #define DBG_DeclareCategories uArchCat
 #define DBG_SetDefaultOps     AddCat(uArchCat)
@@ -166,52 +165,44 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
     anInsn->connectuArch(*this);
     // If in-order execution is enabled, hook instructions together to force
     // them to execute in order.
-    // if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
+    
+    
+    //PC of the instruction: anInsn->pc
+    //Destination register of instruction: 
+    //Last PC to write to a register: theRegisters.lastWriterPC(aReg)
+
     if (theInOrderExecute && !theROB.empty()) {
-            // Each load/store is being connected to the previous load/store
-        if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore) {
+     // Each load/store is being connected to the previous load/store
+        if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
+
+
             for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
-                if ((*rit)->instClass() == clsLoad || (*rit)->instClass() == clsStore) {
+                auto cls = (*rit)->instClass();
+                if (cls == clsLoad || cls == clsStore || theIST.lookup((*rit)->pc())) {
                     anInsn->setPreceedingInstruction(*rit);
                     break;
                 }
             }
+
+            
+
+            // for (auto producerReg : producers) {
+            //     theIST.access(theRegisters.lastWriterPC(producerReg));
+            // }
         } else {
             //each instruction that is not load/store is connected to the latest
             //instruction that is not load/store
             for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
                 auto cls = (*rit)->instClass();
-                if (cls != clsLoad && cls != clsStore) {
+                if (cls != clsLoad && cls != clsStore && !theIST.lookup((*rit)->pc())) {
                     anInsn->setPreceedingInstruction(*rit);
                     break;
                 }
             }
         }
     }
-   
 
-if (auto sinst = boost::dynamic_pointer_cast<nDecoder::SemanticInstruction>(anInsn)) {
-    static const nDecoder::eOperandCode kSrcs[] = {nDecoder::kRS1, nDecoder::kRS2,
-                                                   nDecoder::kRS3, nDecoder::kRS4, nDecoder::kRS5};
-    for (auto oc : kSrcs) {
-        if (sinst->hasOperand(oc)) {
-            reg mr = sinst->operand<reg>(oc);
-            DBG_(Crit, (<< " src " << oc << " -> " << mr));
-        }
-    }
-
-    static const nDecoder::eOperandCode kDsts[] = {nDecoder::kRD, nDecoder::kRD1,
-                                                   nDecoder::kRD2, nDecoder::kCCpd};
-    for (auto oc : kDsts) {
-        if (sinst->hasOperand(oc)) {
-            reg mr = sinst->operand<reg>(oc);
-            DBG_(Crit, (<< " dst " << oc << " -> " << mr));
-        }
-    }
-}
-
-
-
+    // if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
     theROB.push_back(anInsn);
     // theNPC = boost::none;
 
