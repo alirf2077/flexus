@@ -166,11 +166,6 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
     // If in-order execution is enabled, hook instructions together to force
     // them to execute in order.
     
-    
-    //PC of the instruction: anInsn->pc
-    //Destination register of instruction: 
-    //Last PC to write to a register: theRegisters.lastWriterPC(aReg)
-
     if (theInOrderExecute && !theROB.empty()) {
      // Each load/store is being connected to the previous load/store
         if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
@@ -183,12 +178,7 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
                     break;
                 }
             }
-
-            
-
-            // for (auto producerReg : producers) {
-            //     theIST.access(theRegisters.lastWriterPC(producerReg));
-            // }
+        
         } else {
             //each instruction that is not load/store is connected to the latest
             //instruction that is not load/store
@@ -242,6 +232,25 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
         (*dispatch_interactions.front())(anInsn, *this);
         dispatch_interactions.pop_front();
     }
+
+    if (theInOrderExecute && !theROB.empty()) {
+     // Each load/store is being connected to the previous load/store
+        if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
+            if (auto sinst = boost::dynamic_pointer_cast<nDecoder::SemanticInstruction>(anInsn)) {
+                static const nDecoder::eOperandCode kSrcs[] = {nDecoder::kPS1, nDecoder::kPS2,
+                                                               nDecoder::kPS3, nDecoder::kPS4,
+                                                               nDecoder::kPS5};
+            for (auto oc : kSrcs) {
+                if (!sinst->hasOperand(oc)) continue;
+                mapped_reg preg = sinst->operand<mapped_reg>(oc);
+                theIST.access(theRegisters.lastWriterPC(preg));
+            }
+        }
+
+        }
+
+    }
+
 
     if (theDispatchStalled || (theInOrderExecute && !anInsn->canDispatch())) {
         theDispatchStalled = true;
