@@ -30,9 +30,9 @@ CoreImpl::CoreImpl(uArchOptions_t options,
   , signalStoreForwardingHit_fn(_signalStoreForwardingHit)
   , mmuResync_fn(_mmuResync)
   , thePendingTrap(kException_None)
-  , theBypassNetwork((options.inOrderExecute)? kxRegs_Total : (kxRegs_Total + options.extraXRegs), 
-                     (options.inOrderExecute)? kvRegs : (kvRegs + options.extraVRegs),
-                     (options.inOrderExecute)? kccRegs : (kccRegs + (options.extraXRegs + 6) / 7))
+  , theBypassNetwork((options.renameEnabled)? (kxRegs_Total + options.extraXRegs) : kxRegs_Total, 
+                     (options.renameEnabled)? (kvRegs + options.extraVRegs) : kvRegs,
+                     (options.renameEnabled)? (kccRegs + (options.extraXRegs + 6) / 7) : kccRegs)
   , theLastGarbageCollect(0)
   , theDispatchStalled(false)
   , theDispatchWidth(options.dispatchWidth)
@@ -94,6 +94,7 @@ CoreImpl::CoreImpl(uArchOptions_t options,
   , /* CMU-ONLY */
   theInOrderMemory(options.inOrderMemory)
   , theInOrderExecute(options.inOrderExecute)
+  , theRenameEnabled(options.renameEnabled)
   , theIdleThisCycle(false)
   , theIdleCycleCount(0)
   , theBBVTracker(/*BBVTracker::createBBVTracker(aNode)*/ 0)
@@ -278,12 +279,12 @@ CoreImpl::CoreImpl(uArchOptions_t options,
 
     // original constructor continues here...
     prepareMemOpAccounting();
-
-    bool inOrder = (theInOrderExecute == 1);
+    //Forood: check if the passed parameters are okay or not
+    bool no_rename = (theRenameEnabled == 0);
     std::vector<uint32_t> reg_file_sizes;
     reg_file_sizes.resize(kLastMapTableCode + 2);
 
-    if (inOrder) {
+    if (no_rename) {
         reg_file_sizes[xRegisters] = kxRegs_Total;
         reg_file_sizes[vRegisters] = kvRegs;
         reg_file_sizes[ccBits]     = kccRegs;
@@ -296,16 +297,16 @@ CoreImpl::CoreImpl(uArchOptions_t options,
     DBG_(Crit, (<< "Number of physical vRegisters: " << reg_file_sizes[vRegisters]));
     DBG_(Crit, (<< "Number of physical ccBits: " << reg_file_sizes[ccBits]));
 
-    theRegisters.initialize(reg_file_sizes, inOrder);
+    theRegisters.initialize(reg_file_sizes, no_rename);
 
     // Map table for xRegisters
-    theMapTables.push_back(std::make_shared<PhysicalMap>(kxRegs_Total, reg_file_sizes[xRegisters], inOrder));
+    theMapTables.push_back(std::make_shared<PhysicalMap>(kxRegs_Total, reg_file_sizes[xRegisters], no_rename));
 
     // Map table for vRegisters
-    theMapTables.push_back(std::make_shared<PhysicalMap>(kvRegs, reg_file_sizes[vRegisters], inOrder));
+    theMapTables.push_back(std::make_shared<PhysicalMap>(kvRegs, reg_file_sizes[vRegisters], no_rename));
 
     // Map table for ccBits
-    theMapTables.push_back(std::make_shared<PhysicalMap>(kccRegs, reg_file_sizes[ccBits], inOrder));
+    theMapTables.push_back(std::make_shared<PhysicalMap>(kccRegs, reg_file_sizes[ccBits], no_rename));
 
     for (auto i = 0; i < kxRegs_Total; ++i)
         theXRScoreboard[i] = 0;

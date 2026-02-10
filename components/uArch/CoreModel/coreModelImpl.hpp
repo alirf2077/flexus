@@ -277,6 +277,7 @@ class CoreImpl : public CoreModel
   public:
     bool theInOrderMemory;
     bool theInOrderExecute;
+    bool theRenameEnabled;
 
   private:
     bool theIdleThisCycle;

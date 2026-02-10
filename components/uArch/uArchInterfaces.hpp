@@ -514,6 +514,7 @@ struct uArchOptions_t
     bool trackParallelAccesses; /* CMU-ONLY */
     bool inOrderMemory;
     bool inOrderExecute;
+    bool renameEnabled;
     uint32_t onChipLatency;
     uint32_t offChipLatency;
 

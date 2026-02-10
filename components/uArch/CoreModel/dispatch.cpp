@@ -31,7 +31,7 @@ CoreImpl::availableRegs() const
     auto freeXRegs = theMapTables[0]->theFreeList.size();
     auto freeVRegs = theMapTables[1]->theFreeList.size();
     auto freeCCs = theMapTables[2]->theFreeList.size();
-    if (theInOrderExecute) {
+    if (!theRenameEnabled) {
         return std::make_tuple(kxRegs_Total, kvRegs, kccRegs); // Handled seperately, not through map tables
     } else {
         return std::make_tuple(freeXRegs, freeVRegs, freeCCs);
@@ -254,6 +254,10 @@ CoreImpl::deferInteraction(boost::intrusive_ptr<Instruction> anInsn, boost::intr
 bool
 CoreImpl::canDispatch(mapped_reg &reg, bool isRead)
 {
+    if (theInOrderExecute && theRenameEnabled) {
+        return true;
+    }
+
     if (isRead)
         return true;
 
@@ -263,6 +267,17 @@ CoreImpl::canDispatch(mapped_reg &reg, bool isRead)
 void
 CoreImpl::mapDestInOrder(int64_t seq, mapped_reg &reg)
 {
+    if (!theInOrderExecute) {
+        return;
+    }
+
+    // In-order + renaming: do not use architectural scoreboards.
+    // (Physical-reg readiness handles hazards.)
+    if (theRenameEnabled) {
+        theRegisters.setStatus(reg, kNotReady);
+        return;
+    }
+    
     if (theInOrderExecute) {
         if (reg.theType == xRegisters)
             theXRScoreboard[reg.theIndex] = seq;
@@ -276,6 +291,9 @@ CoreImpl::mapDestInOrder(int64_t seq, mapped_reg &reg)
 bool
 CoreImpl::canReadInOrder(int64_t seq, mapped_reg &reg)
 {
+    if (!theInOrderExecute || theRenameEnabled) {
+        return false;
+    }
     if (theInOrderExecute) {
         if (reg.theType == xRegisters)
             return theXRScoreboard[reg.theIndex] >= seq;

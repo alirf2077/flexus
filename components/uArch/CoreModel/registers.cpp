@@ -26,7 +26,8 @@ CoreImpl::mapRegister(mapped_reg aRegister)
 {
     FLEXUS_PROFILE();
     DBG_(VVerb, (<< theName << " Mapping " << aRegister));
-    if(!theInOrderExecute) {
+    if(!theInOrderExecute || theRenameEnabled) {
+
         eResourceStatus status = theRegisters.status(aRegister);
         DBG_Assert(status == kUnmapped, (<< " aRegister=" << aRegister << " status=" << status));
     }
@@ -128,7 +129,7 @@ CoreImpl::create(reg aReg)
     std::tie(mapped.first.theIndex, mapped.second.theIndex) = mapTable(aReg.theType).create(aReg.theIndex);
     mapRegister(mapped.first);
 
-    if(!theInOrderExecute) {
+    if(!theInOrderExecute || theRenameEnabled ) {
         eResourceStatus status = theRegisters.status(mapped.second);
         DBG_Assert(status != kUnmapped, (<< " aRegister=" << mapped.second << " status=" << status));
     }
@@ -171,7 +172,7 @@ CoreImpl::restore(reg aName, mapped_reg aReg, boost::intrusive_ptr<Instruction> 
                (<< "MapTable Invariant check failed after restoring " << aReg
                 << "MapTable: " << mapTable(aReg.theType)));
     */
-    if (theInOrderExecute && anInstruction->isDispatched()) {
+    if (theInOrderExecute && anInstruction->isDispatched() && !theRenameEnabled) {
         theRegisters.setStatus(aReg, kReady);
         DBG_(VVerb, (<< theName << " Restoring " << aReg << " to Ready"));
     } else {

@@ -37,6 +37,7 @@ COMPONENT_PARAMETERS(
   PARAMETER( OnChipLatency, uint32_t, "On-Chip Side-Effect latency", "on-chip-se", 0)
   PARAMETER( OffChipLatency, uint32_t, "Off-Chip Side-Effect latency", "off-chip-se", 0)
   PARAMETER( Multithread, bool, "Enable multi-threaded execution", "multithread", false )
+  PARAMETER( RenameEnabled, bool, "Enables register renaming in the execution", "reg_rename_enable", false)
 
   PARAMETER( ExtraXRegs, uint32_t, "Number of extra integer registers (beyond 32)", "extra_xregs", 0)
   PARAMETER( ExtraVRegs, uint32_t, "Number of extra vector/FP registers (beyond 32)", "extra_vregs", 0)

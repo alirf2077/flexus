@@ -161,6 +161,7 @@ class FLEXUS_COMPONENT(uArch)
         options.trackParallelAccesses         = cfg.TrackParallelAccesses; /* CMU-ONLY */
         options.inOrderMemory                 = cfg.InOrderMemory;
         options.inOrderExecute                = cfg.InOrderExecute;
+        options.renameEnabled                = cfg.RenameEnabled;
         options.onChipLatency                 = cfg.OnChipLatency;
         options.offChipLatency                = cfg.OffChipLatency;
         options.name                          = statName();
