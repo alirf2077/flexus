@@ -46,6 +46,7 @@ CoreImpl::CoreImpl(uArchOptions_t options,
   , thePreserveInteractions(false)
   , theMemoryPortArbiter(*this, options.numMemoryPorts, options.numStorePrefetches)
   , theROBSize(options.ROBSize)
+//   , theISTSize(128)     //provisional size; can be tuned later if needed
   , theRetireWidth(options.retireWidth)
   , theInterruptSignalled(false)
   , thePendingInterrupt(kException_None)
@@ -298,6 +299,8 @@ CoreImpl::CoreImpl(uArchOptions_t options,
     DBG_(Crit, (<< "Number of physical ccBits: " << reg_file_sizes[ccBits]));
 
     theRegisters.initialize(reg_file_sizes, no_rename);
+    //TODO: Forood: must later be read from options
+    theIST.initialize(128);
 
     // Map table for xRegisters
     theMapTables.push_back(std::make_shared<PhysicalMap>(kxRegs_Total, reg_file_sizes[xRegisters], no_rename));
@@ -405,6 +408,7 @@ CoreImpl::resetCore()
     theDispatchingInsts.clear();
 
     theROB.clear();
+    theIST.clear();
 
     theSquashRequested = false;
     theSquashReason    = eSquashCause(0);

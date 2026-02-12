@@ -31,6 +31,7 @@ namespace Stat = Flexus::Stat;
 #include "../CoreModel.hpp"
 #include "../MapTable.hpp"
 #include "../RegisterFile.hpp"
+#include "../InstructionSliceTable.hpp"
 #include "../systemRegister.hpp"
 #include "FPStatRegisters.hpp" // Msutherl
 #include "PSTATE.hpp"
@@ -102,6 +103,9 @@ class CoreImpl : public CoreModel
     // Register Files
     RegisterFile theRegisters;
     int32_t theRoundingMode;
+
+    // The Instruction Slice Table
+    InstructionSliceTable theIST;
 
     uint64_t thePC;
     bool theAARCH64;
@@ -682,7 +686,7 @@ class CoreImpl : public CoreModel
     void squashRegister(mapped_reg aRegister);
     register_value readRegister(mapped_reg aRegister);
     register_value readArchitecturalRegister(reg aRegister, bool aRotate);
-    void writeRegister(mapped_reg aRegister, register_value aValue, bool isW);
+    void writeRegister(mapped_reg aRegister, register_value aValue, bool isW, VirtualMemoryAddress thePC);
     void disconnectRegister(mapped_reg aReg, boost::intrusive_ptr<Instruction> inst);
     void initializeRegister(mapped_reg aRegister, register_value aValue);
     void copyRegValue(mapped_reg aSource, mapped_reg aDest);

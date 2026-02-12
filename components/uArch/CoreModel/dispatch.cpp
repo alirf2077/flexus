@@ -165,7 +165,34 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
     anInsn->connectuArch(*this);
     // If in-order execution is enabled, hook instructions together to force
     // them to execute in order.
-    if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
+    
+    if (theInOrderExecute && !theROB.empty()) {
+     // Each load/store is being connected to the previous load/store
+        if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
+
+
+            for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
+                auto cls = (*rit)->instClass();
+                if (cls == clsLoad || cls == clsStore || theIST.lookup((*rit)->pc())) {
+                    anInsn->setPreceedingInstruction(*rit);
+                    break;
+                }
+            }
+        
+        } else {
+            //each instruction that is not load/store is connected to the latest
+            //instruction that is not load/store
+            for (auto rit = theROB.rbegin(); rit != theROB.rend(); ++rit) {
+                auto cls = (*rit)->instClass();
+                if (cls != clsLoad && cls != clsStore && !theIST.lookup((*rit)->pc())) {
+                    anInsn->setPreceedingInstruction(*rit);
+                    break;
+                }
+            }
+        }
+    }
+
+    // if (theInOrderExecute && !theROB.empty()) { anInsn->setPreceedingInstruction(theROB.back()); }
     theROB.push_back(anInsn);
     // theNPC = boost::none;
 
@@ -205,6 +232,25 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
         (*dispatch_interactions.front())(anInsn, *this);
         dispatch_interactions.pop_front();
     }
+
+    if (theInOrderExecute && !theROB.empty()) {
+     // Each load/store is being connected to the previous load/store
+        if (anInsn->instClass() == clsLoad || anInsn->instClass() == clsStore || theIST.lookup(anInsn->pc())) {
+            if (auto sinst = boost::dynamic_pointer_cast<nDecoder::SemanticInstruction>(anInsn)) {
+                static const nDecoder::eOperandCode kSrcs[] = {nDecoder::kPS1, nDecoder::kPS2,
+                                                               nDecoder::kPS3, nDecoder::kPS4,
+                                                               nDecoder::kPS5};
+            for (auto oc : kSrcs) {
+                if (!sinst->hasOperand(oc)) continue;
+                mapped_reg preg = sinst->operand<mapped_reg>(oc);
+                theIST.access(theRegisters.lastWriterPC(preg));
+            }
+        }
+
+        }
+
+    }
+
 
     if (theDispatchStalled || (theInOrderExecute && !anInsn->canDispatch())) {
         theDispatchStalled = true;
