@@ -243,7 +243,10 @@ CoreImpl::dispatch(boost::intrusive_ptr<Instruction> anInsn)
             for (auto oc : kSrcs) {
                 if (!sinst->hasOperand(oc)) continue;
                 mapped_reg preg = sinst->operand<mapped_reg>(oc);
-                theIST.access(theRegisters.lastWriterPC(preg));
+                // Only completed writes record a valid last-writer PC.
+                if (theRegisters.status(preg) == kReady) {
+                    theIST.access(theRegisters.lastWriterPC(preg));
+                }
             }
         }
 
